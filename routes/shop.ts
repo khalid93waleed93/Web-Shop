@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/", (req: Request, res: Response, next: NextFunction) => {
     res.render('shop', {prods: products, docTitle: 'Shop'});
-    res.render('shop');
+    // res.render('shop');
     // console.log("middleware3");
     // console.log(products);
     // res.sendFile(path.join(rootDir, 'views', 'shop.html'));

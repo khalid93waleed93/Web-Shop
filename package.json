@@ -8,15 +8,10 @@
     "start": "nodemon --exec ts-node server.ts"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/khalid93waleed93/play-ts.git"
+    "type": "git"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/khalid93waleed93/play-ts/issues"
-  },
-  "homepage": "https://github.com/khalid93waleed93/play-ts#readme",
   "devDependencies": {
     "@types/express": "^4.17.17",
     "nodemon": "^2.0.21",

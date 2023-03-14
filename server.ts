@@ -16,10 +16,8 @@ app.use(shopRouter);
 app.use('/admin',admin.router);
 
 app.use((req:Request, res:Response, next:NextFunction) => {
-    // res.status(404).sendFile(path.join(__dirname, 'views/404.html'));
     res.status(404).sendFile(path.join(rootDir, 'views/404.html'));
-    // console.log(path.join(rootDir, 'views/404.html'));
-    // console.log(path.join(__dirname, 'views/404.html'));   
+
 })
 
 app.listen(3000, () => {

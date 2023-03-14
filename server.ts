@@ -17,7 +17,7 @@ app.use('/admin',admin.router);
 
 app.use((req:Request, res:Response, next:NextFunction) => {
     res.status(404).sendFile(path.join(rootDir, 'views/404.html'));
-
+    
 })
 
 app.listen(3000, () => {

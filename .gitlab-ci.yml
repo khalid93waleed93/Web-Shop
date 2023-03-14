@@ -17,7 +17,7 @@ build:
 
 # Test-Stage
 test:
-  image: node:14
+  image: node:16
   stage: test
   script:
     - npm install

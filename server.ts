@@ -11,7 +11,7 @@ app.set('view engine', 'pug');
 
 // app.use(bodyParser.urlencoded({ extended:true }));
 app.use(express.urlencoded({ extended:true }));
-app.use(express.static(rootDir +'/public'))
+app.use(express.static(rootDir +'/testing/public'))
 app.use(shopRouter);
 app.use('/admin',admin.router);
 

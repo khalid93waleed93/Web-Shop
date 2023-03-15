@@ -10,4 +10,4 @@ RUN npm config set -- '//gitlab.com/api/v4/projects/30810500/packages/npm/:_auth
 RUN npm install
 
 EXPOSE 3000
-CMD ["node", "start"]
+CMD ["npm", "start"]

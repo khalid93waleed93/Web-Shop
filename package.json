@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec ts-node server.ts",
-    "build": "esbuild server.ts --bundle --platform=node --outdir=dist && xcopy views dist\\views /s /e /h /y /i && xcopy public dist\\public /s /e /h /y /i"
+    "build": "esbuild server.ts --bundle --platform=node --outdir=dist && xcopy views dist\\views /s /e /h /y /i && xcopy public dist\\public /s /e /h /y /i",
+    "build-for-docker":"esbuild server.ts --bundle --platform=node --outdir=dist && rsync -avz views/ dist/views/ && rsync -avz public/ dist/public/"
 
   },
   "repository": {

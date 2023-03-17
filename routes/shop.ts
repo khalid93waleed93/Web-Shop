@@ -1,12 +1,8 @@
 import express, { Request,Response,NextFunction } from "express";
-import path from 'path';
-import { rootDir } from "../util/path";
-import { products } from "./admin";
+import { getShop } from "../controllers/products";
 
 const router = express.Router();
 
-router.get("/", (req: Request, res: Response, next: NextFunction) => {
-    res.render('shop', {prods: products, pageTitle: 'Shop', path:'/'});
-});
+router.get("/", getShop);
 
-export default router
+export { router }

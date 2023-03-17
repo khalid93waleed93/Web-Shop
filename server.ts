@@ -1,19 +1,19 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
-import bodyParser from 'body-parser';
 import {rootDir} from './util/path';
 import * as admin  from './routes/admin'
-import shopRouter from './routes/shop'
+import * as shop  from './routes/shop'
+import { get404 } from './controllers/error';
 import fs from 'fs'
 
 
 const app = express();
-app.set('view engine', 'pug');
+app.set('view engine', 'ejs');
 
 // app.use(bodyParser.urlencoded({ extended:true }));
 app.use(express.urlencoded({ extended:true }));
 const publicPath: string = path.join(rootDir, 'public');
-const checkPublicDirMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+const checkStaticContent = (req: Request, res: Response, next: NextFunction): void => {
     fs.access(publicPath, (err) => {
         if (err) {
             console.error('Das Verzeichnis "public" wurde nicht gefunden.');
@@ -22,13 +22,11 @@ const checkPublicDirMiddleware = (req: Request, res: Response, next: NextFunctio
     next();
 };
 
-app.use(express.static(publicPath), checkPublicDirMiddleware);
-app.use(shopRouter);
+app.use(express.static(publicPath), checkStaticContent);
+app.use(shop.router);
 app.use('/admin',admin.router);
 
-app.use((req:Request, res:Response, next:NextFunction) => {
-    res.status(404).render('404',{pageTitle:'Page not found'});
-})
+app.use(get404)
 
 app.listen(3000, () => {
     console.log('Server is listening on port 3000');

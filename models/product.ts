@@ -1,95 +1,105 @@
-import fs from 'fs';
-import path from 'path';
-import { rootDir } from '../util/path';
-import { Cart } from './cart'; 
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../util/database';
 
-export interface ProductProps {
-    title: string;
-    description: string;
-    imageUrl: string;
-    price: number;
-    id:string | null;
-}
-const p = path.join(rootDir,'data','products.json');
-const createDataDirectory = () => {
-  const dirPath = path.join(rootDir, 'data');
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath);
-  }
-}
-const getDataFromFile = (callback: (arg0: Product[]) => void) =>{
-  fs.readFile(p,(err,fileContent) => {
-    if(err){
-      createDataDirectory()
-      callback([]);
-    } else {
-    callback(JSON.parse(fileContent.toString()))
-    }
-})
-  
-}
-export class Product implements ProductProps {
-  
+interface ProductAttributes {
+  id: number;
+  // userId:number;
   title: string;
-  description: string;
   price: number;
   imageUrl: string;
-  id: string | null;
-
-  constructor({ id, title, description, price, imageUrl }: ProductProps) {
-    this.title = title;
-    this.description = description;
-    this.price = price;
-    this.imageUrl = imageUrl;
-    this.id = id;
-  }
-
-  save() {
-    
-    getDataFromFile((products: Product[]) => {
-      if(this.id){
-        const existingProductIndex = products.findIndex(prod => prod.id === this.id);
-        const updatedProducts = [...products];
-        updatedProducts[existingProductIndex]= this;
-        fs.writeFile(p, JSON.stringify(updatedProducts),(err)=>{
-          err?console.log(err):null;
-      });
-      } else {
-        this.id = Math.random().toString();
-        products.push(this);
-        fs.writeFile(p, JSON.stringify(products),(err)=>{
-          err?console.log(err):null;
-        });
-      }
-    }) 
-  }
-  static deleteById(productId:string){
-    getDataFromFile(products => {
-      const updatedProducts = products.filter(e =>  e.id !== productId);
-      const deletedProduct = products.find(e => e.id === productId)!;
-      fs.writeFile(p, JSON.stringify(updatedProducts),(err)=>{
-        if(err){
-          console.log(err)
-        } else {
-          Cart.deleteProduct(productId,deletedProduct.price)
-        }
-        
-      });
-    })
-
-  }
-  static fetchAll(callback: (arg0:Product[]) => void) {
-    getDataFromFile(callback)
-  }
-
-  static findById(id:string,callback: (arg0: Product) => void) {
-    
-    getDataFromFile( products => {
-        
-      const product = products.find(p => p.id === id);
-      callback(product!);
-    })
-
-  }
-
+  description: string;
 }
+// export interface ProductAttributesWithUserId extends Optional<ProductAttributes, 'id'> {
+//   UserId: number;
+// }
+
+class Product extends Model<ProductAttributes> {
+  public id!: number;
+  // public userId!: number;
+  public title!: string;
+  public price!: number;
+  public imageUrl!: string;
+  public description!: string;
+}
+
+Product.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      allowNull: false,
+      primaryKey: true,
+    },
+    title: {
+      type: DataTypes.STRING,
+    },
+    price: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    },
+    imageUrl: {
+      type: DataTypes.STRING(),
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING(),
+      allowNull: false,
+    },
+   
+  },
+  {
+    sequelize,
+    tableName: 'products',
+  }
+);
+
+export { Product };
+
+
+// import { query } from '../util/database';
+// import { rootDir } from '../util/path';
+// import { Cart } from './cart'; 
+
+// export interface ProductProps {
+//     title: string;
+//     description: string;
+//     imageUrl: string;
+//     price: number;
+//     id:string | null;
+// }
+
+// export class Product implements ProductProps {
+  
+//   title: string;
+//   description: string;
+//   price: number;
+//   imageUrl: string;
+//   id: string | null;
+
+//   constructor({ id, title, description, price, imageUrl }: ProductProps) {
+//     this.title = title;
+//     this.description = description;
+//     this.price = price;
+//     this.imageUrl = imageUrl;
+//     this.id = id;
+//   }
+
+//   save() {
+//     return query('insert into products (title, price, imageUrl, description) values ($1, $2, $3, $4)',
+//     [this.title, this.price, this.imageUrl, this.description])
+    
+//   }
+//   static deleteById(id:string){
+
+//   }
+//   static fetchAll() {
+//    return query('select * from products');
+//   }
+
+//   static findById(id:string) {
+//     // return query(`select * from products where id = ${id}`)
+//     return query('select * from products where id = $1', [parseFloat(id)])
+
+//   }
+
+// }

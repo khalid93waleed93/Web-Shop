@@ -1,30 +1,33 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../util/database';
 
-export interface CartAttributes {
-  id?: number;
+interface CartItemAttributes {
+  id: number;
+  quantity: number;
 }
 
-class Cart extends Model<CartAttributes> {
-  [x: string]: any;
+
+class CartItem extends Model<CartItemAttributes> {
   public id!: number;
+  public quantity!: number;
   
 }
 
-Cart.init(
+CartItem.init(
   {
     id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     allowNull: false,
     primaryKey: true,
-    }
+    },
+    quantity: DataTypes.INTEGER
   },
   {
     sequelize,
-    tableName: 'cart',
+    tableName: 'cartItem',
   }
 );
 
-export { Cart };
+export { CartItem };
 

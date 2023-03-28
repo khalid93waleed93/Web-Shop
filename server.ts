@@ -1,5 +1,11 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import { expand }from 'dotenv-expand';
+const result = dotenv.config();
+if (result.error) {
+    console.error(result.error);
+    process.exit(1);
+  }
+  expand(result)
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import {rootDir} from './util/path';
@@ -7,7 +13,7 @@ import * as admin  from './routes/admin'
 import * as shop  from './routes/shop'
 import { get404 } from './controllers/error';
 import fs from 'fs'
-import {  createTablesAndRelations,setUser } from './util/database';
+import {  createTablesAndRelations,setUser } from './util/databaseSet';
 import { User } from './models/user';
 declare global {
     namespace Express {
@@ -16,6 +22,9 @@ declare global {
       }
     }
 }
+
+async function init(){
+
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -44,5 +53,5 @@ createTablesAndRelations(()=>{
     });
 })
 
-
-
+}
+init()

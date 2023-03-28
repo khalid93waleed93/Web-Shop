@@ -1,5 +1,12 @@
+
+
+
+
+
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../util/database';
+import { CartItem } from './cart-item';
+import { OrderItem } from './order-item';
 
 interface ProductAttributes {
   id: number;
@@ -9,17 +16,30 @@ interface ProductAttributes {
   imageUrl: string;
   description: string;
 }
+export interface ProductInstance extends Model<ProductAttributes>, ProductAttributes {
+  UserId: number;
+  CartItem: CartItem;
+  // OrderItem: OrderItem;
+  // product: { quantity: number; };
+  OrderItem: { quantity: number; };
+
+}
 // export interface ProductAttributesWithUserId extends Optional<ProductAttributes, 'id'> {
 //   UserId: number;
 // }
 
-class Product extends Model<ProductAttributes> {
+class Product extends Model<ProductAttributes> implements ProductInstance {
   public id!: number;
   // public userId!: number;
   public title!: string;
   public price!: number;
   public imageUrl!: string;
   public description!: string;
+  public UserId!: number;
+  public CartItem!: CartItem;
+  // public OrderItem!: OrderItem;
+    // public product!: { quantity: number; };
+    public OrderItem!: { quantity: number; };
 }
 
 Product.init(
@@ -49,57 +69,9 @@ Product.init(
   },
   {
     sequelize,
-    tableName: 'products',
+    tableName: 'product',
   }
 );
 
 export { Product };
 
-
-// import { query } from '../util/database';
-// import { rootDir } from '../util/path';
-// import { Cart } from './cart'; 
-
-// export interface ProductProps {
-//     title: string;
-//     description: string;
-//     imageUrl: string;
-//     price: number;
-//     id:string | null;
-// }
-
-// export class Product implements ProductProps {
-  
-//   title: string;
-//   description: string;
-//   price: number;
-//   imageUrl: string;
-//   id: string | null;
-
-//   constructor({ id, title, description, price, imageUrl }: ProductProps) {
-//     this.title = title;
-//     this.description = description;
-//     this.price = price;
-//     this.imageUrl = imageUrl;
-//     this.id = id;
-//   }
-
-//   save() {
-//     return query('insert into products (title, price, imageUrl, description) values ($1, $2, $3, $4)',
-//     [this.title, this.price, this.imageUrl, this.description])
-    
-//   }
-//   static deleteById(id:string){
-
-//   }
-//   static fetchAll() {
-//    return query('select * from products');
-//   }
-
-//   static findById(id:string) {
-//     // return query(`select * from products where id = ${id}`)
-//     return query('select * from products where id = $1', [parseFloat(id)])
-
-//   }
-
-// }

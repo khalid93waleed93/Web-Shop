@@ -16,7 +16,7 @@ export const getEditProduct = (req: Request, res: Response, next: NextFunction) 
     }
     const prodId = req.params.productId;
     // Product.findByPk(prodId)
-    req.user.getProducts({where: {id: prodId}})
+    req.user!.getProducts({where: {id: prodId}})
     .then((results: Product[]) =>{
         if(results){
             const result = results[0];
@@ -97,7 +97,7 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction) 
     // };
     // Product.create(productData))
     
-    req.user.createProduct(
+    req.user!.createProduct(
         {
         title,
         price,
@@ -113,7 +113,7 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction) 
 }
 export const getProducts = (req: Request, res: Response, next: NextFunction) => {
     // Product.findAll()
-    req.user.getProducts()
+    req.user!.getProducts()
     .then((result: Product[]) => {
         res.render('admin/products', {
             prods: result,

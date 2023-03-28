@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import {rootDir} from './util/path';
@@ -6,10 +8,11 @@ import * as shop  from './routes/shop'
 import { get404 } from './controllers/error';
 import fs from 'fs'
 import {  createTablesAndRelations,setUser } from './util/database';
+import { User } from './models/user';
 declare global {
     namespace Express {
       interface Request {
-        user?: any;
+        user?: User;
       }
     }
 }

@@ -1,6 +1,8 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../util/database";
-import { CartAttributes } from "./cart";
+import { Cart } from "./cart";
+import { Order } from "./order";
+import { Product } from "./product";
 
 interface UserAttributes {
     id?: number;
@@ -9,14 +11,26 @@ interface UserAttributes {
     
 }
 export interface UserInstance extends Model<UserAttributes>, UserAttributes {
-  createCart(): Promise<CartAttributes>;
+  createCart(): Promise<Cart>;
+  getCart(): Promise<Cart | null>;
+  getOrders(options?:object): Promise<Order[]>;
+  getProducts(options?:object): Promise<Product[]>;
+  createProduct(product?: Partial<Product>): Promise<Product>;
+  createOrder(order?: Partial<Order>): Promise<Order>
 }
 class User extends Model<UserAttributes> implements UserInstance {
+    
     // [x: string]: any;
     public id!: number;
     public name!: string;
     public email!: string;
-    public createCart!: () => Promise<CartAttributes>;
+    public createCart!: () => Promise<Cart>;
+    public getCart!:() => Promise<Cart | null>;
+    public getProducts!:(options?:object) => Promise<Product[]>;
+    public createProduct! :(product?: Partial<Product>) => Promise<Product>;
+    public createOrder!:(order?: Partial<Order>) => Promise<Order>;
+    public getOrders!:(options?:object) => Promise<Order[]>;
+
 
 }
   

@@ -1,6 +1,9 @@
 const { build } = require('esbuild');
 const { copy } = require('fs-extra');
 const fs = require('fs-extra');
+// const  envFilePlugin  = require('esbuild-envfile-plugin'); 
+const dotenv = require('dotenv');
+const envVars = dotenv.config().parsed;
 
 async function copyPublicFolder() {
   await copy('public', 'dist/public');
@@ -27,6 +30,9 @@ async function buildApp() {
     target: ['node14'],
     outfile: 'dist/server.js',
     external: ['pg-hstore'],
+    define: {
+      'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL)
+    },
   });
 
   console.log('Copying public folder');

@@ -1,6 +1,6 @@
 import {Sequelize} from "sequelize";
 
-const databaseUrl = process.env.DATABASE_URL || process.env.LOCAL_DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL // || process.env.LOCAL_DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error('No database connection string found in environment variables');

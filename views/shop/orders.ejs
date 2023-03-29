@@ -8,14 +8,20 @@
         <% } else { %>
             <ul>
                 <% orders.forEach(order => { %>
+                    
                     <li>
                         <h1># <%= order.id %></h1>
-                        <ul>
-                            <% order.products.forEach(product => { %>
-                                <li><%= product.title %> (<%= product.OrderItem.quantity %>)</li>
-                            <% }); %>
-                        </ul>
+                        <% if (order.products.length > 0) { %>
+                            <ul>
+                                <% order.products.forEach(product => { %>
+                                    <li><%= product.title %> (<%= product.OrderItem.quantity %>)</li>
+                                <% }); %>
+                            </ul>
+                        <% } else { %>
+                            <h1>No Products in this order</h1>
+                        <% } %>
                     </li>
+                    
                 <% }); %>
             </ul>
         <% } %>

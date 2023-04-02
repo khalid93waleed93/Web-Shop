@@ -1,6 +1,6 @@
 import { NextFunction, Response,Request } from "express";
-import { Product } from "../models/product";
 // import { Product } from "../models/product";
+import { Product } from "../models/product";
 
 export const getAddProduct = (req: Request, res: Response, next: NextFunction) => { 
     res.render('admin/edit-product',{ 
@@ -15,12 +15,9 @@ export const getEditProduct = (req: Request, res: Response, next: NextFunction) 
         return res.redirect('/');
     }
     const prodId = req.params.productId;
-    // Product.findByPk(prodId)
-    req.user!.getProducts({where: {id: prodId}})
-    .then((results: Product[]) =>{
-        if(results){
-            const result = results[0];
-            
+    Product.findById(prodId)
+    .then( result =>{
+        if(result){ 
             res.render('admin/edit-product',{
                 pageTitle: result.title,
                 path:'admin/edit-product',
@@ -31,14 +28,7 @@ export const getEditProduct = (req: Request, res: Response, next: NextFunction) 
             res.status(404).render('404',{pageTitle:'Page not found', path:req.url})
         }
     }).catch((err: Error) => console.log(err));
-    // Product.findById(prodId, product =>{
-    //     res.render('admin/edit-product',{ 
-    //         pageTitle:'Edit Product',
-    //         path:'/admin/edit-product',
-    //         editing: editMode,
-    //         product: product
-    //     });
-    // })
+    
     
 }
 export const postEditProduct = (req: Request, res: Response, next: NextFunction) => {
@@ -48,35 +38,29 @@ export const postEditProduct = (req: Request, res: Response, next: NextFunction)
         // If the input value is not valid, send an error response
         return res.status(400).json({error: "Invalid price value"});
     }
-    Product.findByPk(req.body.productId).then(result => {
-        if(result){
-        result.title = req.body.title;
-        result.price = req.body.price;
-        result.description = req.body.description;
-        result.imageUrl = req.body.imageUrl
-        return result?.save()
-        }else{
-            return
-        }
-    }).then(result =>{
-        if(result){
+    const { title, price, description, imageUrl, productId } = req.body;
+    const product = new Product(title, price, description, imageUrl,req.user._id, productId)
+    product.save()
+    // Product.findById(req.body.productId)
+    // .then(result => {
+        
+    //     if(result){
+    //     result.title = req.body.title;
+    //     result.price = req.body.price;
+    //     result.description = req.body.description;
+    //     result.imageUrl = req.body.imageUrl
+    //     return result?.save()
+    //     }else{
+    //         return
+    //     }
+    // })
+    .then(result =>{
+        
         console.log('updated product');
         res.redirect('/admin/products')
-        } else {
-            return
-        }
-    }).catch(err => console.log(err))
         
-    // const productData: ProductProps = {
-    //     id: req.body.productId,
-    //     title: req.body.title,
-    //     description: req.body.description,
-    //     imageUrl: req.body.imageUrl,
-    //     price: parseFloat(req.body.price)
-    // };
-    // const updatedProduct = new Product(productData);
-    // updatedProduct.save();
-    // res.redirect('/admin/products')
+    }).catch(err => console.log(err))
+    
 }
 
 export const postAddProduct = (req: Request, res: Response, next: NextFunction) => {
@@ -88,54 +72,29 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction) 
     }
     // console.log('reeeq',req.user);
     const { title, price, description, imageUrl } = req.body;
-    // const productData: ProductAttributesWithUserId = {
-    //   title,
-    //   price,
-    //   description,
-    //   imageUrl,
-    //   UserId: req.user!.id  // Hier fügen wir das userId-Feld hinzu
-    // };
-    // Product.create(productData))
-    
-    req.user!.createProduct(
-        {
-        title,
-        price,
-        description,
-        imageUrl,
-        }).then(() => {
-            console.log('added product');
-            res.redirect('/admin/products')
-            
-        }).catch((err: Error) => {
-            console.log( err.message , err.name, err.stack)
+    const product = new Product(title, price, description, imageUrl, req.user._id)
+    product.save()
+   .then(() => {
+        console.log('added product');
+        res.redirect('/admin/products')
         })
+    .catch((err: Error) => {
+        console.log( err )
+    })
 }
 export const getProducts = (req: Request, res: Response, next: NextFunction) => {
-    // Product.findAll()
-    req.user!.getProducts()
-    .then((result: Product[]) => {
+    Product.fetchAll()
+    .then((result) => {
         res.render('admin/products', {
             prods: result,
             pageTitle: 'Admin Products',
             path: '/admin/products'
         });
     }).catch((err: Error) => console.log(err))
-    //     res.render('admin/products', {
-    //         prods: products,
-    //         pageTitle: 'Admin Products',
-    //         path: '/admin/products'
-    //     });
-    // });
+    
 }
 export const postDeleteProduct = (req: Request, res: Response, next: NextFunction) => {
-    Product.findByPk(req.body.productId).then(result => {
-        if(result){
-        return result.destroy()
-        }else{
-            return
-        }
-    }).then(result =>{
+    Product.deleteById(req.body.productId).then(result =>{
         
         console.log('destroyed product');
         res.redirect('/admin/products')

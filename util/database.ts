@@ -1,14 +1,36 @@
-import {Sequelize} from "sequelize";
+// import { error, log } from "console";
+import { NextFunction, Request, Response } from "express";
+import { Db, MongoClient, ObjectId } from "mongodb";
+import { User } from "../models/user";
 
-const databaseUrl = process.env.LOCAL_DATABASE_URL || process.env.DATABASE_URL ;
-
-if (!databaseUrl) {
-  throw new Error('No database connection string found in environment variables');
+let _db:Db;
+export const mongoConnect = (callback: () => void) => {
+  MongoClient.connect('mongodb+srv://khalid93waleed:lammkopf@clusternodejs.8dgcznv.mongodb.net/shop?retryWrites=true&w=majority')
+  .then(client => {
+    console.log('Connected');
+    _db = client.db();
+    callback();
+  })
+  .catch(err =>{ 
+    console.log(err);
+    throw err;
+  })
 }
-
-export const sequelize = new Sequelize(databaseUrl, {
-  dialect: 'postgres',
-  protocol: 'postgres',
-  logging: false,
-});
-// export const sequelize = new Sequelize('nodejs-app','postgres','lammkopf', {dialect:'postgres',host:'localhost', port:5432})
+export const getDb = () => {
+  if(_db){
+    return _db
+  }
+  throw ' No db found'
+}
+export const setUser = (req:Request , res: Response, next:NextFunction) => {
+  User.findById('64257cb9aba867d684c66422')
+  .then(user => {
+     
+    if(user){
+      // req.user = User.fromMongoDocument(user as UserDocument);
+      req.user = new User(user.name, user.email, user.cart ,user._id.toString())
+      
+    }
+    
+    next();
+  }).catch(err => console.log(err))}

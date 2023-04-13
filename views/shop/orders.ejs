@@ -11,10 +11,12 @@
                     
                     <li>
                         <h1># <%= order._id %></h1>
-                        <% if (order.items.length > 0) { %>
+                        <% if (order.products.length > 0) { %>
                             <ul>
-                                <% order.items.forEach(product => { %>
-                                    <li><%= product.title %> (<%= product.quantity %>)</li>
+                                <!-- <% console.log( 'ejs' ,order.products)%> -->
+                                <% order.products.forEach(p => { %>
+                                    
+                                    <li><%= p.product.title %> (<%= p.quantity %>)</li>
                                 <% }); %>
                             </ul>
                         <% } else { %>

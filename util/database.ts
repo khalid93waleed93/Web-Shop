@@ -2,13 +2,18 @@
 import { NextFunction, Request, Response } from "express";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { User } from "../models/user";
+import mongoose from "mongoose";
 
-let _db:Db;
 export const mongoConnect = (callback: () => void) => {
-  MongoClient.connect('mongodb+srv://khalid93waleed:lammkopf@clusternodejs.8dgcznv.mongodb.net/shop?retryWrites=true&w=majority')
+  mongoose.connect(process.env.MONGODB_URI!)
   .then(client => {
     console.log('Connected');
-    _db = client.db();
+    // User.findOne().then( u => {
+    //   if(!u){
+    //     const user = new User('khalid93waleed','k.waleed@viscircle.com',{items:[]});
+    //     user.save();
+    //   }
+    // })
     callback();
   })
   .catch(err =>{ 
@@ -16,21 +21,20 @@ export const mongoConnect = (callback: () => void) => {
     throw err;
   })
 }
-export const getDb = () => {
-  if(_db){
-    return _db
-  }
-  throw ' No db found'
-}
+// export const getDb = () => {
+//   if(_db){
+//     return _db
+//   }
+//   throw ' No db found'
+// }
 export const setUser = (req:Request , res: Response, next:NextFunction) => {
-  User.findById('64257cb9aba867d684c66422')
+  if(!req.session.user){
+    return next();
+  }
+  User.findById(req.session.user._id)
   .then(user => {
-     
     if(user){
-      // req.user = User.fromMongoDocument(user as UserDocument);
-      req.user = new User(user.name, user.email, user.cart ,user._id.toString())
-      
+      req.user = user 
     }
-    
     next();
   }).catch(err => console.log(err))}

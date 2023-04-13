@@ -1,12 +1,19 @@
 import { NextFunction, Response,Request } from "express";
 // import { Product } from "../models/product";
 import { Product } from "../models/product";
+import { log } from "console";
+import { UserModel } from "../models/user";
+import { OrderModel } from "../models/order";
+import { ObjectId } from "mongodb";
 
-export const getAddProduct = (req: Request, res: Response, next: NextFunction) => { 
+export const getAddProduct = (req: Request, res: Response, next: NextFunction) => {
+    log(req.session.isLoggedIn) 
     res.render('admin/edit-product',{ 
         pageTitle:'Add Product',
         path:'/admin/add-product',
-        editing: false
+        editing: false,
+        isAuthenticated: req.session.isLoggedIn
+        
     });
 }
 export const getEditProduct = (req: Request, res: Response, next: NextFunction) => { 
@@ -22,7 +29,8 @@ export const getEditProduct = (req: Request, res: Response, next: NextFunction) 
                 pageTitle: result.title,
                 path:'admin/edit-product',
                 product: result,
-                editing:editMode
+                editing:editMode,
+                isAuthenticated: req.session.isLoggedIn
                 })
         } else {
             res.status(404).render('404',{pageTitle:'Page not found', path:req.url})
@@ -39,28 +47,29 @@ export const postEditProduct = (req: Request, res: Response, next: NextFunction)
         return res.status(400).json({error: "Invalid price value"});
     }
     const { title, price, description, imageUrl, productId } = req.body;
-    const product = new Product(title, price, description, imageUrl,req.user._id, productId)
-    product.save()
-    // Product.findById(req.body.productId)
-    // .then(result => {
+    Product.findById(productId)
+    .then(p => {
         
-    //     if(result){
-    //     result.title = req.body.title;
-    //     result.price = req.body.price;
-    //     result.description = req.body.description;
-    //     result.imageUrl = req.body.imageUrl
-    //     return result?.save()
-    //     }else{
-    //         return
-    //     }
-    // })
-    .then(result =>{
+        if(p && p.userId.toString() === req.user.id){
+            p.title= title;
+            p.price= price;
+            p.imageUrl= imageUrl;
+            p.description= description;
+            return p.save()
+            .then(result =>{
+                // console.log('updated product');
+                res.redirect('/admin/products');
+            })
+        }else {
+            return res.redirect('/');
+        }
         
-        console.log('updated product');
-        res.redirect('/admin/products')
-        
-    }).catch(err => console.log(err))
+    //     const product = new Product(title, price, description, imageUrl, req.user._id)
+    // // console.log('11111111111',productId);
+    //     product.save()
+    })
     
+    .catch(err => console.log(err))
 }
 
 export const postAddProduct = (req: Request, res: Response, next: NextFunction) => {
@@ -70,9 +79,9 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction) 
         // If the input value is not valid, send an error response
         return res.status(400).json({error: "Invalid price value"});
     }
-    // console.log('reeeq',req.user);
-    const { title, price, description, imageUrl } = req.body;
-    const product = new Product(title, price, description, imageUrl, req.user._id)
+//     // console.log('reeeq',req.user);
+    const { title, price, imageUrl,description } = req.body;
+    const product = new Product(title, price, description, imageUrl, req.user!._id)
     product.save()
    .then(() => {
         console.log('added product');
@@ -85,21 +94,58 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction) 
 export const getProducts = (req: Request, res: Response, next: NextFunction) => {
     Product.fetchAll()
     .then((result) => {
+        // log(result)
+        const filteredResult = result.filter(e => e.userId.toString() === req.user.id)
         res.render('admin/products', {
-            prods: result,
+            prods:filteredResult,
+            // prods:result,
             pageTitle: 'Admin Products',
-            path: '/admin/products'
+            path: '/admin/products',
+            isAuthenticated: req.session.isLoggedIn
         });
     }).catch((err: Error) => console.log(err))
     
 }
 export const postDeleteProduct = (req: Request, res: Response, next: NextFunction) => {
-    Product.deleteById(req.body.productId).then(result =>{
+    const productId = req.body.productId;
+    Product.findById(productId)
+    .then(product => {
+        if(product && product.userId.toString() === req.user.id) {
+            // Remove the product from all users' carts
+            UserModel.updateMany(
+                {},
+                { $pull: { "cart.items": { productId: productId } } }
+            )
+            .then(result => {
+                return OrderModel.updateMany(
+                    { "products.product._id":new ObjectId(productId) },
+                    { $pull: { "products": { "product._id": new ObjectId(productId) } } }
+                    )
+            })
+            .then(result => {
+                console.log('resuuuult',result);
+                
+                return Product.deleteById(productId);
+            })
+            .then(result => {
+                console.log('result',result);
+                res.redirect('/admin/products')
+            })
+            .catch(err => console.log(err));
+
+        } else {
+            res.redirect('/')
+        }
+    })
+    .catch(err => console.log(err));
         
-        console.log('destroyed product');
-        res.redirect('/admin/products')
+   
+    // Product.deleteById(req.body.productId).then(result =>{
+        
+    //     console.log('result',result);
+    //     res.redirect('/admin/products')
         
         
-    }).catch(err => console.log(err))
+    // }).catch(err => console.log(err))
 
 }

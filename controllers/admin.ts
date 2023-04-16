@@ -1,151 +1,165 @@
 import { NextFunction, Response,Request } from "express";
-// import { Product } from "../models/product";
 import { Product } from "../models/product";
-import { log } from "console";
 import { UserModel } from "../models/user";
 import { OrderModel } from "../models/order";
 import { ObjectId } from "mongodb";
+import { validationResult } from "express-validator";
+import { log } from "console";
+import { Schema } from "mongoose";
 
-export const getAddProduct = (req: Request, res: Response, next: NextFunction) => {
-    log(req.session.isLoggedIn) 
+export const getAddProduct = (req: Request, res: Response, next: NextFunction) => { 
     res.render('admin/edit-product',{ 
         pageTitle:'Add Product',
         path:'/admin/add-product',
         editing: false,
-        isAuthenticated: req.session.isLoggedIn
-        
+        hasError:false,
+        errorMessage:'',
+        validationErrors:[]
     });
 }
-export const getEditProduct = (req: Request, res: Response, next: NextFunction) => { 
+export const getEditProduct = async (req: Request, res: Response, next: NextFunction) => {
     const editMode = req.query.edit;
     if(!editMode){
         return res.redirect('/');
     }
     const prodId = req.params.productId;
-    Product.findById(prodId)
-    .then( result =>{
+    try {
+        const result = await Product.findById(prodId);
         if(result){ 
             res.render('admin/edit-product',{
                 pageTitle: result.title,
                 path:'admin/edit-product',
                 product: result,
                 editing:editMode,
-                isAuthenticated: req.session.isLoggedIn
-                })
+                hasError:false,
+                errorMessage:'',
+                validationErrors:[]
+
+
+            });
         } else {
-            res.status(404).render('404',{pageTitle:'Page not found', path:req.url})
+            res.status(404).render('404',{pageTitle:'Page not found', path:req.url});
         }
-    }).catch((err: Error) => console.log(err));
-    
-    
-}
-export const postEditProduct = (req: Request, res: Response, next: NextFunction) => {
-    const inputVal = req.body.price;
-        // Check if input value is not a positive number with two decimal places
-    if ((req.body) && (isNaN(parseFloat(inputVal)) || parseFloat(inputVal) < 0 || inputVal.includes(".") && inputVal.split(".")[1].length > 2)) {
-        // If the input value is not valid, send an error response
-        return res.status(400).json({error: "Invalid price value"});
+    } catch(err) {
+        next(err);
     }
+}
+
+export const postEditProduct = async (req: Request, res: Response, next: NextFunction) => {
+    // const inputVal = req.body.price;
+    // if ((req.body) && (isNaN(parseFloat(inputVal)) || parseFloat(inputVal) < 0 || inputVal.includes(".") && inputVal.split(".")[1].length > 2)) {
+    //     return res.status(400).json({error: "Invalid price value"});
+    // }
     const { title, price, description, imageUrl, productId } = req.body;
-    Product.findById(productId)
-    .then(p => {
-        
+    const errors = validationResult(req); 
+    if(!errors.isEmpty()){
+        return res.status(422).render('admin/edit-product',{ 
+            pageTitle:'Edit Product',
+            path:'/admin/edit-product',
+            editing: true,
+            hasError: true,
+            product:{
+                title,
+                price,
+                description,
+                imageUrl,
+                _id:productId
+            },
+            errorMessage:errors.array()[0].msg,
+            validationErrors: errors.array()
+        });
+    }
+    try {
+        const p = await Product.findById(productId);
         if(p && p.userId.toString() === req.user.id){
             p.title= title;
             p.price= price;
             p.imageUrl= imageUrl;
             p.description= description;
-            return p.save()
-            .then(result =>{
-                // console.log('updated product');
-                res.redirect('/admin/products');
-            })
+            await p.save();
+            // console.log('updated product');
+            res.redirect('/admin/products');
         }else {
             return res.redirect('/');
         }
-        
-    //     const product = new Product(title, price, description, imageUrl, req.user._id)
-    // // console.log('11111111111',productId);
-    //     product.save()
-    })
-    
-    .catch(err => console.log(err))
+    } catch(err) {
+        next(err);
+    }
 }
 
-export const postAddProduct = (req: Request, res: Response, next: NextFunction) => {
-    const inputVal = req.body.price;
-        // Check if input value is not a positive number with two decimal places
-    if ((req.body) && (isNaN(parseFloat(inputVal)) || parseFloat(inputVal) < 0 || inputVal.includes(".") && inputVal.split(".")[1].length > 2)) {
-        // If the input value is not valid, send an error response
-        return res.status(400).json({error: "Invalid price value"});
-    }
-//     // console.log('reeeq',req.user);
+export const postAddProduct = async (req: Request, res: Response, next: NextFunction) => {
+    // const inputVal = req.body.price;
+    // if ((req.body) && (isNaN(parseFloat(inputVal)) || parseFloat(inputVal) < 0 || inputVal.includes(".") && inputVal.split(".")[1].length > 2)) {
+    //     return res.status(400).json({error: "Invalid price value"});
+    // }
+
     const { title, price, imageUrl,description } = req.body;
-    const product = new Product(title, price, description, imageUrl, req.user!._id)
-    product.save()
-   .then(() => {
+    const errors = validationResult(req); 
+    if(!errors.isEmpty()){
+        return res.status(422).render('admin/edit-product',{ 
+            pageTitle:'Add Product',
+            path:'/admin/add-product',
+            editing: false,
+            hasError: true,
+            product:{
+                title,
+                price,
+                description,
+                imageUrl
+            },
+            errorMessage:errors.array()[0].msg,
+            validationErrors: errors.array()
+        });
+    }
+    try {
+        const product = new Product(title, price, description, imageUrl, req.user!._id);
+        // const product = new Product(title, price, description, imageUrl, new Schema.Types.ObjectId('111111111111'));
+        await product.save();
         console.log('added product');
-        res.redirect('/admin/products')
-        })
-    .catch((err: Error) => {
-        console.log( err )
-    })
+        res.redirect('/admin/products');
+    } catch(err) {
+        // console.log(err);
+        // const error = new Error(err);
+        return next(err);
+    }
 }
-export const getProducts = (req: Request, res: Response, next: NextFunction) => {
-    Product.fetchAll()
-    .then((result) => {
-        // log(result)
-        const filteredResult = result.filter(e => e.userId.toString() === req.user.id)
+
+export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await Product.fetchAll(next);
+        const filteredResult = result!.filter(e => e.userId.toString() === req.user.id);
         res.render('admin/products', {
             prods:filteredResult,
-            // prods:result,
             pageTitle: 'Admin Products',
             path: '/admin/products',
             isAuthenticated: req.session.isLoggedIn
         });
-    }).catch((err: Error) => console.log(err))
-    
+    } catch(err) {
+        next(err);
+    }
 }
-export const postDeleteProduct = (req: Request, res: Response, next: NextFunction) => {
+
+export const postDeleteProduct = async (req: Request, res: Response, next: NextFunction) => {
     const productId = req.body.productId;
-    Product.findById(productId)
-    .then(product => {
-        if(product && product.userId.toString() === req.user.id) {
+    try {
+        const product = await Product.findById(productId);
+        if (product && product.userId.toString() === req.user.id) {
             // Remove the product from all users' carts
-            UserModel.updateMany(
+            await UserModel.updateMany(
                 {},
                 { $pull: { "cart.items": { productId: productId } } }
-            )
-            .then(result => {
-                return OrderModel.updateMany(
-                    { "products.product._id":new ObjectId(productId) },
-                    { $pull: { "products": { "product._id": new ObjectId(productId) } } }
-                    )
-            })
-            .then(result => {
-                console.log('resuuuult',result);
-                
-                return Product.deleteById(productId);
-            })
-            .then(result => {
-                console.log('result',result);
-                res.redirect('/admin/products')
-            })
-            .catch(err => console.log(err));
-
+            );
+            await OrderModel.updateMany(
+                { "products.product._id": new ObjectId(productId) },
+                { $pull: { "products": { "product._id": new ObjectId(productId) } } }
+            );
+            await Product.deleteById(productId);
+            console.log('Product deleted');
+            res.redirect('/admin/products');
         } else {
-            res.redirect('/')
+            res.redirect('/');
         }
-    })
-    .catch(err => console.log(err));
-        
-   
-    // Product.deleteById(req.body.productId).then(result =>{
-        
-    //     console.log('result',result);
-    //     res.redirect('/admin/products')
-        
-        
-    // }).catch(err => console.log(err))
-
-}
+    } catch (err) {
+        next(err);
+    }
+};

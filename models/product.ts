@@ -1,4 +1,6 @@
-import mongoose, {Document, ObjectId, Schema} from "mongoose";
+import { NextFunction } from "express";
+import fetch from 'node-fetch'
+import mongoose, {Document, ObjectId, Schema, SchemaTypes} from "mongoose";
 
 export interface IProduct extends Document {
     title: string;
@@ -13,7 +15,7 @@ export interface IProduct extends Document {
       required: true,
     },
     price: {
-      type: Number,
+      type: Schema.Types.Decimal128,
       required: true,
     },
     imageUrl: {
@@ -59,9 +61,40 @@ export class Product {
       } 
     }
   }
-  static fetchAll(){
-    return ProductModel.find()
+//  static async fetchAll(callback : NextFunction){
+//     return ProductModel.find().then(async prods => {
+//       if(prods){
+//         await Promise.all(
+//           prods.map(async e => {
+//             if(!(await checkUrl(e.imageUrl))){
+//               e.imageUrl = 'invalid'
+//             }
+//           })
+//         )
+//         return prods
+ 
+//       }
+//     }).catch( err =>{
+//         callback(err)
+//     })
+//   }
+static async fetchAll(callback: NextFunction) {
+  try {
+    const prods = await ProductModel.find();
+    if (prods) {
+      await Promise.all(
+        prods.map(async (e) => {
+          if (!(await checkUrl(e.imageUrl))) {
+            e.imageUrl = 'invalid';
+          }
+        })
+      );
+      return prods;
+    }
+  } catch (err) {
+    callback(err);
   }
+}
   static findById(id:string){
     return ProductModel.findById(id)
   }
@@ -70,4 +103,18 @@ export class Product {
     return ProductModel.findByIdAndRemove(id);
   }
  
+}
+async function checkUrl(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url);
+    console.log(response.status);
+    
+    // Überprüfen, ob der Statuscode 200 (Erfolg) ist
+    return response.status === 200;
+  } catch (error) {
+    console.log(error);
+    
+    // console.error('Fehler beim Abrufen der URL:', error);
+    return false;
+  }
 }

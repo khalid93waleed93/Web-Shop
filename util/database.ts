@@ -35,5 +35,10 @@ export const setUser = (req:Request , res: Response, next:NextFunction) => {
       req.user = user 
     }
     next();
-  }).catch(err => next(err))
+  }).catch(err =>{
+    console.log('setUser');
+    next(err)
+    
+  } )
+    
 }

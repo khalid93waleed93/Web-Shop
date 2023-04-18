@@ -15,8 +15,8 @@ router.post("/add-product",
     [
     body('title')
     .isString().isLength({min:3}).trim(),
-    body('imageUrl')
-    .isURL(),
+    // body('imageUrl')
+    // .isURL(),
     body('price', 'Price must be a positive decimal with two digits after the comma')
       .matches(/^\d+\.\d{2}$/)
       .customSanitizer(value => {
@@ -33,8 +33,8 @@ router.post('/edit-product',
     [
     body('title')
     .isString().isLength({min:3}).trim(),
-    body('imageUrl')
-    .isURL(),
+    // body('imageUrl')
+    // .isURL(),
     body('price','Price must be a positive decimal with two digits after the comma')
     .matches(/^\d+\.\d{2}$/)
     .customSanitizer(value => {

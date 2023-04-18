@@ -1,25 +1,23 @@
 import { NextFunction, Response,Request } from "express";
-// import { Cart } from "../models/cart";
-// import { OrderItem } from "../models/order-item";
 import { Product, IProduct} from "../models/product";
-import { User } from "../models/user";
 import { Order } from "../models/order";
+import { writeInvoicePdf } from "../util/fileHelper";
 
-export const getProducts = (req: Request, res: Response, next: NextFunction) => {
-    Product.fetchAll(next)
-    // .select('title price -_id')
-    // .populate('userId', 'email name -_id')
-    .then( (result) => {
-        console.log(result);
-        
+const ITEM_PER_PAGE = 1;
+
+export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await Product.fetchAll();
         res.render('shop/products', {
             prods: result,
             pageTitle: 'All Products',
-            path:'/products',
+            path: '/products',
             isAuthenticated: req.session.isLoggedIn
-        })
-    }).catch(err => next(err));
-   
+        });
+    } catch (err) {
+        next(err);
+    }
+    
 }
 export const getProduct = async (req: Request, res: Response, next: NextFunction) => {
     const prodId = req.params.productId;
@@ -35,90 +33,71 @@ export const getProduct = async (req: Request, res: Response, next: NextFunction
           isAuthenticated: req.session.isLoggedIn,
         });
       } else {
-        res.status(404).render('404', {
-          pageTitle: 'Page not found',
-          path: req.url,
-        });
+        res.redirect('/404')
       }
     } catch (error) {
-    //   console.log(error);
       next(error);
     }
   };
 
 
-export const getIndex = (req: Request, res: Response, next: NextFunction) => {
-    Product.fetchAll(next).then( (result) => {
+export const getIndex = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await Product.fetchAll();
         res.render('shop/index', {
             prods: result,
             pageTitle: 'Shop',
-            path:'/',
+            path: '/',
             isAuthenticated: req.session.isLoggedIn
-        })
-    }).catch(err => next(err));
+        });
+    } catch (err) {
+        next(err)    
+   }
 }
-export const postCart = (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body.x_csrf_token);
+export const postCart = async (req: Request, res: Response, next: NextFunction) => {
     
     const prodId = req.body.productId;
-    Product.findById(prodId.toString())
-    .then(product => {
-        if(product){
+    try {
+        const product = await Product.findById(prodId.toString());
+        if (product) {
             // const { title, price, description, imageUrl, _id } = product
-            return req.user!.addToCart(product)
-            
+            const result = await req.user!.addToCart(product);
+            console.log(result?._id);
+            res.redirect('/cart');
         }
-        return
-    })
-    .then(result => {
-        
-        console.log(result?._id);
-        res.redirect('/cart')
-        
-    })
-    .catch(err => next(err))
+    } catch (err) {
+        next(err);
+    }
    
 }
 
-
-export const getCart = (req: Request, res: Response, next: NextFunction) => {
-        // User
-        // .findById(req.user._id)
-        // .select('cart')
-        req.user!
-        .populate('cart.items.productId')
-        
-        .then( c => {
-
-            console.log(c?.cart.items);
-            
-                res.render('shop/cart', {
-                    products: c?.cart.items,
-                    pageTitle: 'Your Cart',
-                    path:'/cart',
-                    isAuthenticated: req.session.isLoggedIn
-                })
-        }).catch((err:Error) => {
-            next(err);   
-        })
-
-}
+export const getCart = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userWithCart = await req.user!.populate('cart.items.productId');
+        res.render('shop/cart', {
+            products: userWithCart.cart.items,
+            pageTitle: 'Your Cart',
+            path: '/cart',
+            isAuthenticated: req.session.isLoggedIn
+        });
+    } catch (err) {
+        next(err);
+    }
+};
     
 
-export const getOrders = (req: Request, res: Response, next: NextFunction) => {
-    Order.findByUserId(req.user!._id)
-    .then((orders) => {
-        console.log('getOrders',orders);
-      res.render('shop/orders', {
-        pageTitle: 'Your Orders',
-        path: '/orders',
-        orders: orders,
-        isAuthenticated: req.session.isLoggedIn
-      });
-    })
-    .catch((err: Error) => {
+export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const orders = await Order.findByUserId(req.user!._id);
+        res.render('shop/orders', {
+            pageTitle: 'Your Orders',
+            path: '/orders',
+            orders: orders,
+            isAuthenticated: req.session.isLoggedIn
+        });
+    } catch (err) {
         next(err);
-    });
+    }
 
 }
 // export const getCheckout = (req: Request, res: Response, next: NextFunction) => {
@@ -129,16 +108,14 @@ export const getOrders = (req: Request, res: Response, next: NextFunction) => {
 // }
 
 
-export const postCartDeleteItem = (req: Request, res: Response, next: NextFunction) => {
+export const postCartDeleteItem = async (req: Request, res: Response, next: NextFunction) => {
     const prodId = req.body.id;
-
-    req.user!.deleteItemFromCart(prodId)
-    .then(()=> {
+    try {
+        await req.user!.deleteItemFromCart(prodId);
         res.redirect('/cart');
-    })
-    .catch((err: Error) => {
+    } catch (err) {
         next(err);
-    });
+    }
 }
 
 export const postOrder = async (req: Request, res: Response, next: NextFunction) => {
@@ -156,9 +133,76 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
         );
         order.save();
         await user.clearCart();
-        res.redirect('/');
+        res.redirect('/orders');
     } catch (err) {
         next(err);
     }
 }
 
+export const getInvoice = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const orderId = req.params.orderId;
+        const invoiceName = 'invoice-' + orderId + '.pdf';
+        // const invoicePath = path.join(rootDir, 'data', 'invoices', invoiceName);
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return next(new Error('No order'));
+        }
+        if (order.user.userId.toString() !== req.user.id) {
+            return next(new Error('Unauthorized'));
+        }
+        writeInvoicePdf(order,res,invoiceName);
+        
+    } catch (err) {
+        console.log(err);
+        
+        // next(err);
+    }
+};
+
+
+// export const getInvoice = async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const invoiceName = 'invoice-'+ orderId + '.pdf'
+//         const invoicePath = path.join(rootDir,'data','invoices',invoiceName);
+//         const order = await Order.findById(orderId);
+//         if(!order){
+//             return next(new Error('No order'))
+//         }
+//         if(order.user.userId.toString() !== req.user.id){
+//             return next(new Error(' Unauthorized'))
+//         }
+//         const pdfDoc = new PDFDocument();
+//         res.setHeader('Content-Type','application/pdf');
+//         res.setHeader('Content-Disposition','inline; filename="' + invoiceName + '"' );
+//         pdfDoc.pipe(createWriteStream(invoicePath));
+//         pdfDoc.pipe(res);
+//         pdfDoc.fontSize(26).text('Invoice', {underline:true});
+//         pdfDoc.text('----------');
+//         let totalPrice = 0;
+//         order.products.forEach(p => {
+//             totalPrice += p.quantity * p.product.price
+//             pdfDoc.fontSize(14).text(p.product.title + ' - '+ p.quantity + ' x $' + p.product.price)
+//         });
+//         pdfDoc.text('-----');
+//         pdfDoc.text('Total Price: $' + totalPrice.toFixed(2))
+//         pdfDoc.end()
+//         // readFile(invoicePath,(err,data) => {
+//         //     if(err){
+//         //         return next(err)
+//         //     }
+//         //     res.setHeader('Content-Type','application/pdf')
+//         //     res.setHeader('Content-Disposition','inline; filename="d' + invoiceName + '"' )
+//         //     res.send(data)
+//         // })
+//     //    const file = createReadStream(invoicePath);
+//     //    res.setHeader('Content-Type','application/pdf')
+//     //    res.setHeader('Content-Disposition','inline; filename="' + invoiceName + '"' )
+//     //    file.pipe(res)
+        
+//     } catch (err) {
+//         next(err);
+//     }
+// }

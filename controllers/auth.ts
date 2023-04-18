@@ -39,8 +39,6 @@ export const getLogin = (req: Request, res: Response, next: NextFunction) => {
 
 export const getSignup = (req: Request, res: Response, next: NextFunction) => {
     const date = new Date(Date.now());
-    console.log(date);
-
     let message: string | undefined | string[] = req.flash("error");
     message = message.length > 0 ? message[0] : undefined;
     res.render("auth/signup", {
@@ -107,7 +105,6 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
             });;
         }
     } catch (err) {
-        console.log(err);
         res.redirect("/login");
     }
 };
@@ -118,7 +115,6 @@ export const postLogout = (req: Request, res: Response, next: NextFunction) => {
 };
 export const postSignup = async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
-    // console.log(errors.array());
     
     const { email, password, confirmPassword } = req.body;
     

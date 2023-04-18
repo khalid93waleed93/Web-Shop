@@ -1,11 +1,8 @@
 import { NextFunction, Response,Request } from "express";
 import { Product } from "../models/product";
 import { UserModel } from "../models/user";
-import { OrderModel } from "../models/order";
-import { ObjectId } from "mongodb";
 import { validationResult } from "express-validator";
-import { log } from "console";
-import { Schema } from "mongoose";
+import { deleteFile } from "../util/fileHelper";
 
 export const getAddProduct = (req: Request, res: Response, next: NextFunction) => { 
     res.render('admin/edit-product',{ 
@@ -50,7 +47,9 @@ export const postEditProduct = async (req: Request, res: Response, next: NextFun
     // if ((req.body) && (isNaN(parseFloat(inputVal)) || parseFloat(inputVal) < 0 || inputVal.includes(".") && inputVal.split(".")[1].length > 2)) {
     //     return res.status(400).json({error: "Invalid price value"});
     // }
-    const { title, price, description, imageUrl, productId } = req.body;
+    const { title, price, description, productId } = req.body;
+    const image = req.file;
+    
     const errors = validationResult(req); 
     if(!errors.isEmpty()){
         return res.status(422).render('admin/edit-product',{ 
@@ -62,7 +61,6 @@ export const postEditProduct = async (req: Request, res: Response, next: NextFun
                 title,
                 price,
                 description,
-                imageUrl,
                 _id:productId
             },
             errorMessage:errors.array()[0].msg,
@@ -74,10 +72,12 @@ export const postEditProduct = async (req: Request, res: Response, next: NextFun
         if(p && p.userId.toString() === req.user.id){
             p.title= title;
             p.price= price;
-            p.imageUrl= imageUrl;
+            if(image){
+                deleteFile(p.imageUrl);
+                p.imageUrl= image.path;
+            }
             p.description= description;
             await p.save();
-            // console.log('updated product');
             res.redirect('/admin/products');
         }else {
             return res.redirect('/');
@@ -93,7 +93,26 @@ export const postAddProduct = async (req: Request, res: Response, next: NextFunc
     //     return res.status(400).json({error: "Invalid price value"});
     // }
 
-    const { title, price, imageUrl,description } = req.body;
+    const { title, price,description } = req.body;
+    const image = req.file
+    if(!image){
+        return res.status(422).render('admin/edit-product',{ 
+            pageTitle:'Add Product',
+            path:'/admin/add-product',
+            editing: false,
+            hasError: true,
+            product:{
+                title,
+                price,
+                description,
+                
+            },
+            errorMessage:'Attached file is not an image',
+            validationErrors: []
+        });
+    }
+    const imageUrl = image.path
+    // log(imageUrl)
     const errors = validationResult(req); 
     if(!errors.isEmpty()){
         return res.status(422).render('admin/edit-product',{ 
@@ -105,28 +124,25 @@ export const postAddProduct = async (req: Request, res: Response, next: NextFunc
                 title,
                 price,
                 description,
-                imageUrl
+                
             },
             errorMessage:errors.array()[0].msg,
             validationErrors: errors.array()
         });
     }
     try {
-        const product = new Product(title, price, description, imageUrl, req.user!._id);
+        const product = new Product(title, price, description, imageUrl, req.user._id);
         // const product = new Product(title, price, description, imageUrl, new Schema.Types.ObjectId('111111111111'));
         await product.save();
-        console.log('added product');
         res.redirect('/admin/products');
     } catch(err) {
-        // console.log(err);
-        // const error = new Error(err);
-        return next(err);
+         next(err);
     }
 }
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const result = await Product.fetchAll(next);
+        const result = await Product.fetchAll();
         const filteredResult = result!.filter(e => e.userId.toString() === req.user.id);
         res.render('admin/products', {
             prods:filteredResult,
@@ -149,10 +165,11 @@ export const postDeleteProduct = async (req: Request, res: Response, next: NextF
                 {},
                 { $pull: { "cart.items": { productId: productId } } }
             );
-            await OrderModel.updateMany(
-                { "products.product._id": new ObjectId(productId) },
-                { $pull: { "products": { "product._id": new ObjectId(productId) } } }
-            );
+            // await OrderModel.updateMany(
+            //     { "products.product._id": new ObjectId(productId) },
+            //     { $pull: { "products": { "product._id": new ObjectId(productId) } } }
+            // );
+            deleteFile(product.imageUrl)
             await Product.deleteById(productId);
             console.log('Product deleted');
             res.redirect('/admin/products');

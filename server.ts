@@ -14,8 +14,7 @@ import { IUser } from './models/user';
 import dotenv from 'dotenv';
 import { csrfSync } from 'csrf-sync';
 import flash from 'connect-flash'
-import { error } from 'console';
-import http from 'http'
+import multer, { FileFilterCallback } from 'multer'
 
 dotenv.config();
 declare module "express-session"{
@@ -38,7 +37,27 @@ const app = express();
 const { csrfSynchronisedProtection } = csrfSync({
     getTokenFromRequest: (req) => req.body._csrf,
 });
-
+const fileStorage = multer.diskStorage({
+  destination:  (req, file, callback) => {
+      callback(null,'public/images')
+  },
+  filename: (req, file, callback) => {
+    
+      callback(null,new Date().toISOString().replace(/:/g,'-')+ '-'+file.originalname)
+  },
+})
+const fileFilter = (req: Request, file: Express.Multer.File, callback: FileFilterCallback) => {
+  if(
+    file.mimetype === 'image/png' ||
+    file.mimetype === 'image/jpg' ||
+    file.mimetype === 'image/jpeg' 
+  )
+  {
+    callback(null, true);
+  } else {
+    callback(null, false)
+  }
+}
 app.set('view engine', 'ejs');
 const MongoDBStore = connectMongoDBSession(session);
 const store = new MongoDBStore({
@@ -47,7 +66,11 @@ const store = new MongoDBStore({
 })
 
 app.use(express.urlencoded({ extended:true }));
+app.use(multer({storage:fileStorage, fileFilter:fileFilter}).single('image'))
+// app.use(multer({dest:'images'}).single('image'))
+  
 const publicPath: string = path.join(rootDir, 'public');
+const imagesPath: string = path.join(rootDir, 'public','images');
 const checkStaticContent = (req: Request, res: Response, next: NextFunction): void => {
     fs.access(publicPath, (err) => {
         if (err) {
@@ -58,6 +81,7 @@ const checkStaticContent = (req: Request, res: Response, next: NextFunction): vo
 };
 
 app.use(express.static(publicPath), checkStaticContent);
+app.use('/public/images',express.static(imagesPath));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
     
@@ -74,9 +98,7 @@ app.use(session({secret:'my secret', resave:false, saveUninitialized:false, stor
 app.use(csrfSynchronisedProtection);
 app.use((req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
-    res.locals.csrfToken = req.csrfToken!(true);
-    // console.log(res.locals.csrfToken,'---');
-    
+    res.locals.csrfToken = req.csrfToken!(true);    
     next();
 });
 app.use(flash())
@@ -88,10 +110,21 @@ app.use(auth.router);
 app.use('/500', get500)
 app.use(get404)
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+    // res.status(500).render('500', {
+    //   pageTitle: 'Error!',
+    //   path: '/500',
+    //   isAuthenticated: req.session.isLoggedIn,
+    // });
+    let isAuthenticated = false;
+    
+    if (req.session) {
+        isAuthenticated = req.session.isLoggedIn!;
+    }
+    
     res.status(500).render('500', {
-      pageTitle: 'Error!',
-      path: '/500',
-      isAuthenticated: req.session.isLoggedIn,
+        pageTitle: 'Error!',
+        path: '/500',
+        isAuthenticated: isAuthenticated,
     });
   });
 mongoConnect(()=>{

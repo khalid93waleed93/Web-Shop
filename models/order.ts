@@ -3,7 +3,7 @@ import mongoose, {Document, Schema} from "mongoose";
 import { Product, IProduct } from "./product";
 import { User, IUser } from "./user";
 
-interface IOrder extends Document {
+export interface IOrder extends Document {
     user:{
         email: string,
         userId: ObjectId

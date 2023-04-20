@@ -8,7 +8,9 @@ const envVars = dotenv.config().parsed;
 async function copyPublicFolder() {
   await copy('public', 'dist/public');
 }
-
+async function copyDataFolder() {
+  await copy('data', 'dist/data');
+}
 async function copyViewsFolder() {
   await copy('views', 'dist/views');
 }
@@ -31,7 +33,8 @@ async function buildApp() {
     outfile: 'dist/server.js',
     external: ['pg-hstore'],
     define: {
-      'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL)
+      'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL),
+      'process.env.MONGODB_URL': JSON.stringify(envVars.MOBGODB_URL)
     },
   });
 
@@ -43,6 +46,9 @@ async function buildApp() {
 
   console.log('Copying .env file');
   await copyEnvFile();
+
+  console.log('Copying Data folder');
+  await copyDataFolder();
 
   console.log('Build complete');
 }

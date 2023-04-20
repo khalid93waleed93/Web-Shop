@@ -9,6 +9,11 @@ async function copyPublicFolder() {
   await copy('public', 'dist/public');
 }
 async function copyDataFolder() {
+  try {
+    await copy('data', 'dist/data')
+  } catch (error) {
+    await fs.ensureDir('dist/data/invoices');
+  }
   await copy('data', 'dist/data');
 }
 async function copyViewsFolder() {
@@ -24,6 +29,7 @@ async function buildApp() {
 
   // Ensure dist folder
   await fs.ensureDir('dist');
+  
 
   await build({
     entryPoints: ['server.ts'],

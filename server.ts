@@ -52,7 +52,7 @@ const { csrfSynchronisedProtection } = csrfSync({
 });
 const fileStorage = multer.diskStorage({
   destination:  (req, file, callback) => {
-      callback(null,'dist/public/images')
+      callback(null,path.join('public','images'))
   },
   filename: (req, file, callback) => {
     

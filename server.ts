@@ -96,15 +96,15 @@ const checkStaticContent = (req: Request, res: Response, next: NextFunction): vo
 app.use(express.static(publicPath), checkStaticContent);
 app.use('/public/images',express.static(imagesPath));
 
-app.use((req: Request, res: Response, next: NextFunction) => {
+// app.use((req: Request, res: Response, next: NextFunction) => {
     
-    if (req.headers.accept && req.headers.accept.includes('image/*')) {
+//     if (req.headers.accept && req.headers.accept.includes('image/*')) {
         
-      res.status(404).sendFile(path.join(publicPath, 'images', 'default-image.jpg'));
-    } else {
-      next();
-    }
-  });
+//       res.status(404).sendFile(path.join(publicPath, 'images', 'default-image.jpg'));
+//     } else {
+//       next();
+//     }
+//   });
 app.use(session({secret:'my secret', resave:false, saveUninitialized:false, store:store}))
 
 app.use(csrfSynchronisedProtection);

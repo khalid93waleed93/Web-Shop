@@ -14,7 +14,6 @@ async function copyDataFolder() {
   } catch (error) {
     await fs.ensureDir('dist/data/invoices');
   }
-  await copy('data', 'dist/data');
 }
 async function copyViewsFolder() {
   await copy('views', 'dist/views');

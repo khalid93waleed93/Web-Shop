@@ -111,8 +111,7 @@ export const postAddProduct = async (req: Request, res: Response, next: NextFunc
             validationErrors: []
         });
     }
-    const imageUrl = image.path
-    // log(imageUrl)
+    const imageUrl = image.path;
     const errors = validationResult(req); 
     if(!errors.isEmpty()){
         return res.status(422).render('admin/edit-product',{ 
@@ -155,8 +154,9 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     }
 }
 
-export const postDeleteProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const productId = req.body.productId;
+export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
+    
+    const productId = req.params.productId;
     try {
         const product = await Product.findById(productId);
         if (product && product.userId.toString() === req.user.id) {
@@ -171,10 +171,10 @@ export const postDeleteProduct = async (req: Request, res: Response, next: NextF
             // );
             deleteFile(product.imageUrl)
             await Product.deleteById(productId);
-            console.log('Product deleted');
-            res.redirect('/admin/products');
+            // console.log('Product deleted');
+            res.status(200).json({ message: 'Success!' });
         } else {
-            res.redirect('/');
+            res.status(500).json({ message: 'Deleting product failed.' });
         }
     } catch (err) {
         next(err);

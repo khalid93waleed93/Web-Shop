@@ -3,7 +3,7 @@ import mongoose, {Document, Schema} from "mongoose";
 import { Product, IProduct } from "./product";
 interface ICartItem {
   
-  productId: ObjectId;
+  productId: ObjectId | IProduct;
   quantity: number;
   
 }

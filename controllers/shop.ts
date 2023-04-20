@@ -2,21 +2,39 @@ import { NextFunction, Response,Request } from "express";
 import { Product, IProduct} from "../models/product";
 import { Order } from "../models/order";
 import { writeInvoicePdf } from "../util/fileHelper";
+import stripePackage from "stripe";
+const stripe = new stripePackage
+('sk_test_51MyZEBCgJupMH6egW0h1oS65EKgksiyDuWYJ666YWutIJLA4GiShRn2dR0IDh1OYYV0Q6eNTaEiuid1ZKDOTg8Iu001QgKMeSp',
+{
+    apiVersion:"2022-11-15"
+}
+);
+// console.log(stripe);
 
-const ITEM_PER_PAGE = 1;
+const ITEMS_PER_PAGE = 1;
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    const page = +(req.query.page || 1); 
     try {
-        const result = await Product.fetchAll();
+        const totalItems = await Product.fetchAll().countDocuments();
+        const result = await Product.fetchAll()
+                    .skip((page-1) * ITEMS_PER_PAGE)
+                    .limit(ITEMS_PER_PAGE);
         res.render('shop/products', {
             prods: result,
-            pageTitle: 'All Products',
+            pageTitle: 'Products',
             path: '/products',
-            isAuthenticated: req.session.isLoggedIn
+            currentPage: page,
+            hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1 ,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems/ ITEMS_PER_PAGE)
+        
         });
     } catch (err) {
-        next(err);
-    }
+        next(err)    
+   }
     
 }
 export const getProduct = async (req: Request, res: Response, next: NextFunction) => {
@@ -42,15 +60,27 @@ export const getProduct = async (req: Request, res: Response, next: NextFunction
 
 
 export const getIndex = async (req: Request, res: Response, next: NextFunction) => {
+    const page = +(req.query.page || 1);
     try {
-        const result = await Product.fetchAll();
+        const totalItems = await Product.fetchAll().countDocuments();
+        const result = await Product.fetchAll()
+                    .skip((page-1) * ITEMS_PER_PAGE)
+                    .limit(ITEMS_PER_PAGE);
         res.render('shop/index', {
             prods: result,
             pageTitle: 'Shop',
             path: '/',
-            isAuthenticated: req.session.isLoggedIn
+            currentPage: page,
+            hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1 ,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems/ ITEMS_PER_PAGE)
+        
         });
     } catch (err) {
+        
+        
         next(err)    
    }
 }
@@ -61,8 +91,8 @@ export const postCart = async (req: Request, res: Response, next: NextFunction) 
         const product = await Product.findById(prodId.toString());
         if (product) {
             // const { title, price, description, imageUrl, _id } = product
-            const result = await req.user!.addToCart(product);
-            console.log(result?._id);
+            await req.user!.addToCart(product);
+            
             res.redirect('/cart');
         }
     } catch (err) {
@@ -100,12 +130,53 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     }
 
 }
-// export const getCheckout = (req: Request, res: Response, next: NextFunction) => {
-// //     res.render('shop/checkout', {
-// //         pageTitle: 'Checkout',
-// //         path: '/checkout'
-// //     });
-// }
+export const getCheckout = async (req: Request, res: Response, next: NextFunction) => {
+
+    try {
+        const userWithCart = await req.user.populate('cart.items.productId');
+        const products = userWithCart.cart.items;
+        // console.log(products);
+        
+        let totalSum = 0;
+        products.map( p => {
+            return totalSum += p.quantity * (p.productId as IProduct).price
+        })
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types:['card'],
+            mode: 'payment',
+            line_items: products.map(p => {
+                return {
+                    quantity:p.quantity,
+                    price_data: {
+                        currency:'usd',
+                        unit_amount: (p.productId as IProduct).price * 100,
+                        product_data: {
+                            name: (p.productId as IProduct).title,
+                            description: (p.productId as IProduct).description,
+                        },
+                    },
+                };
+            }),
+            customer_email: req.user.email,
+            success_url: req.protocol + "://" + req.get("host") + "/checkout/success",
+            cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+        });
+
+        res.render('shop/checkout', {
+            pageTitle: 'Checkout',
+            path: '/checkout',
+            products,
+            totalSum,
+            sessionId: session.id
+        });
+    } catch (err) {
+        next(err);
+        
+    }
+    
+    
+}
 
 
 export const postCartDeleteItem = async (req: Request, res: Response, next: NextFunction) => {

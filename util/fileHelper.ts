@@ -31,7 +31,7 @@ export const writeInvoicePdf = (order:IOrder, res: Response, invoiceName: string
 
         // Add products table header
         pdfDoc.font('Helvetica-Bold').text('Product', { width: 200, align: 'left', continued: true });
-        pdfDoc.text('Quantity', { width: 100, align: 'left', continued: true });
+        pdfDoc.text('Quantity', { width: 100, align: 'center', continued: true });
         pdfDoc.text('Price', { width: 100, align: 'right' });
         pdfDoc.moveDown(0.5);
 
@@ -40,7 +40,7 @@ export const writeInvoicePdf = (order:IOrder, res: Response, invoiceName: string
         order.products.forEach(p => {
             totalPrice += p.quantity * p.product.price;
             pdfDoc.font('Helvetica').text(p.product.title, { width: 200, align: 'left', continued: true });
-            pdfDoc.text(p.quantity.toString(), { width: 100, align: 'left', continued: true });
+            pdfDoc.text(p.quantity.toString(), { width: 100, align: 'center', continued: true });
             pdfDoc.text('$' + p.product.price, { width: 100, align: 'right' });
             pdfDoc.moveDown();
         });

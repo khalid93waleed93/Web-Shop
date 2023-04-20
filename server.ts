@@ -34,8 +34,21 @@ declare global {
 
 const app = express();
 
+
+
+
+
 const { csrfSynchronisedProtection } = csrfSync({
-    getTokenFromRequest: (req) => req.body._csrf,
+    getTokenFromRequest: (req) => {
+      const tokenFromBody = req.body && req.body['_csrf'];
+    
+      if(tokenFromBody){
+        return tokenFromBody;
+      }
+      const tokenFromHeader = req.headers && req.headers['x-csrf-token'];
+      
+      return tokenFromHeader;
+    }    
 });
 const fileStorage = multer.diskStorage({
   destination:  (req, file, callback) => {
@@ -89,7 +102,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         
       res.status(404).sendFile(path.join(publicPath, 'images', 'default-image.jpg'));
     } else {
-        console.log('not executed');
       next();
     }
   });
@@ -97,12 +109,20 @@ app.use(session({secret:'my secret', resave:false, saveUninitialized:false, stor
 
 app.use(csrfSynchronisedProtection);
 app.use((req, res, next) => {
-    res.locals.isAuthenticated = req.session.isLoggedIn;
-    res.locals.csrfToken = req.csrfToken!(true);    
+    if(req.method !== 'DELETE'){
+      res.locals.isAuthenticated = req.session.isLoggedIn;
+      res.locals.csrfToken = req.csrfToken!(true);
+    }
     next();
 });
 app.use(flash())
-  
+// app.delete('/admin/product/:productId', (req, res) => {
+//   console.log('Received DELETE request for product ID:', req.params.productId);
+//   console.log('Received CSRF token:', req.header('x-csrf-token'));
+
+// 
+
+// });
 app.use(setUser);
 app.use('/admin',admin.router);
 app.use(shop.router);
@@ -115,16 +135,12 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
     //   path: '/500',
     //   isAuthenticated: req.session.isLoggedIn,
     // });
-    let isAuthenticated = false;
-    
-    if (req.session) {
-        isAuthenticated = req.session.isLoggedIn!;
-    }
+    console.log(error);
     
     res.status(500).render('500', {
         pageTitle: 'Error!',
         path: '/500',
-        isAuthenticated: isAuthenticated,
+        isAuthenticated: req.session.isLoggedIn
     });
   });
 mongoConnect(()=>{

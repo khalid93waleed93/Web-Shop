@@ -8,7 +8,7 @@ import { error } from "console";
 export const mongoConnect = (callback: () => void) => {
   mongoose.connect(process.env.MONGODB_URI!)
   .then(client => {
-    console.log('Connected');
+    console.log('Connected to DB');
     // User.findOne().then( u => {
     //   if(!u){
     //     const user = new User('khalid93waleed','k.waleed@viscircle.com',{items:[]});
@@ -18,7 +18,6 @@ export const mongoConnect = (callback: () => void) => {
     callback();
   })
   .catch((err:Error) =>{ 
-    console.log(err.message);
     throw err;
   })
 }
@@ -36,9 +35,7 @@ export const setUser = (req:Request , res: Response, next:NextFunction) => {
     }
     next();
   }).catch(err =>{
-    console.log('setUser');
-    next(err)
-    
+    next(err);
   } )
     
 }

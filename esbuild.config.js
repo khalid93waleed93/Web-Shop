@@ -31,10 +31,11 @@ async function buildApp() {
     platform: 'node',
     target: ['node14'],
     outfile: 'dist/server.js',
-    external: ['pg-hstore'],
+    // external: ['pg-hstore'],
+    external: ['vm2'],
     define: {
       'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL),
-      'process.env.MONGODB_URL': JSON.stringify(envVars.MOBGODB_URL)
+      'process.env.MONGODB_URL': JSON.stringify(envVars.MONGODB_URL)
     },
   });
 

@@ -74,7 +74,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, callback: FileFilte
 app.set('view engine', 'ejs');
 const MongoDBStore = connectMongoDBSession(session);
 const store = new MongoDBStore({
-    uri:process.env.MONGODB_URI!,
+    uri:process.env.MONGODB_URL!,
     collection:'sessions'
 })
 

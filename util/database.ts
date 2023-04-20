@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import { error } from "console";
 
 export const mongoConnect = (callback: () => void) => {
-  mongoose.connect(process.env.MONGODB_URI!)
+  mongoose.connect(process.env.MONGODB_URL!)
   .then(client => {
     console.log('Connected to DB');
     // User.findOne().then( u => {

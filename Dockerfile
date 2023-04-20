@@ -1,7 +1,7 @@
 FROM node:14-alpine
 ARG AUTH_TOKEN
-RUN mkdir -p /docker/app
-WORKDIR /docker/app
+RUN mkdir -p /docker/app/dist
+WORKDIR /docker/app/dist
 COPY . /docker/app
 RUN apk add git
 RUN npm config set @viscircle-org:registry https://gitlab.com/api/v4/projects/30810500/packages/npm/

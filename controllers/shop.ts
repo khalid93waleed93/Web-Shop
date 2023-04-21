@@ -133,6 +133,8 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 export const getCheckout = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+
         const userWithCart = await req.user.populate('cart.items.productId');
         const products = userWithCart.cart.items;
         // console.log(products);
@@ -159,11 +161,14 @@ export const getCheckout = async (req: Request, res: Response, next: NextFunctio
                 };
             }),
             customer_email: req.user.email,
-            success_url: req.protocol + "://" + req.get("host") + "/checkout/success",
-            cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+            // success_url: req.protocol + "://" + req.get("host") + "/checkout/success",
+            // cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+            success_url: protocol + "://" + req.get("host") + "/checkout/success",
+            cancel_url: protocol + "://" + req.get("host") + "/checkout/cancel",
+            
         });
 
-        res.render('shop/checkout', {
+        return res.render('shop/checkout', {
             pageTitle: 'Checkout',
             path: '/checkout',
             products,

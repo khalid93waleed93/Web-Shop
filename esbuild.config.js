@@ -1,6 +1,7 @@
 const { build } = require('esbuild');
 const { copy } = require('fs-extra');
 const fs = require('fs-extra');
+const path = require('path');
 // const  envFilePlugin  = require('esbuild-envfile-plugin'); 
 const dotenv = require('dotenv');
 const envVars = dotenv.config().parsed;
@@ -15,6 +16,7 @@ async function copyDataFolder() {
     await fs.ensureDir('dist/data/invoices');
   }
 }
+
 async function copyViewsFolder() {
   await copy('views', 'dist/views');
 }
@@ -36,12 +38,11 @@ async function buildApp() {
     platform: 'node',
     target: ['node14'],
     outfile: 'dist/server.js',
-    // external: ['pg-hstore'],
-    external: ['vm2'],
+    external: ['vm2', 'pdfkit'],
     define: {
       'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL),
       'process.env.MONGODB_URL': JSON.stringify(envVars.MONGODB_URL)
-    },
+    }
   });
 
   console.log('Copying public folder');

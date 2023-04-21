@@ -72,6 +72,8 @@ const fileFilter = (req: Request, file: Express.Multer.File, callback: FileFilte
   }
 }
 app.set('view engine', 'ejs');
+app.set('trust proxy', 1);
+
 const MongoDBStore = connectMongoDBSession(session);
 const store = new MongoDBStore({
     uri:process.env.MONGODB_URL!,

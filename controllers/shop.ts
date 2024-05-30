@@ -167,7 +167,7 @@ export const getCheckout = async (req: Request, res: Response, next: NextFunctio
             cancel_url: protocol + "://" + req.get("host") + "/checkout/cancel",
             
         });
-
+        
         return res.render('shop/checkout', {
             pageTitle: 'Checkout',
             path: '/checkout',

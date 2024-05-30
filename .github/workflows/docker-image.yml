@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: khaledmilano93/Web-shop:latest
+        tags: khaledmilano93/web-shop:latest
 
     - name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}

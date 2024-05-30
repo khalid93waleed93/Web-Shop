@@ -1,13 +1,18 @@
-FROM node:14-alpine
-ARG AUTH_TOKEN
-RUN mkdir -p /docker/app/dist
-WORKDIR /docker/app/dist
-COPY . /docker/app
-RUN apk add git
-RUN npm config set @viscircle-org:registry https://gitlab.com/api/v4/projects/30810500/packages/npm/
-RUN npm config set -- '//gitlab.com/api/v4/packages/npm/:_authToken' "${AUTH_TOKEN}"
-RUN npm config set -- '//gitlab.com/api/v4/projects/30810500/packages/npm/:_authToken' "${AUTH_TOKEN}"
+# Node.js-Image
+FROM node:14
+
+# Arbeitsverzeichnis
+WORKDIR /usr/src/app
+
+# Kopieren und installieren
+COPY package*.json ./
 RUN npm install
-RUN npm run build
+
+# Kopieren den Rest der Anwendung
+COPY . .
+
+# Exponieren den Port
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+# Starten
+CMD ["npm", "start"]

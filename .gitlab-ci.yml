@@ -1,3 +1,0 @@
-include:
-  - project: 'viscircle-org/releases'
-    file: '/ci-templates/build_docker.yml'

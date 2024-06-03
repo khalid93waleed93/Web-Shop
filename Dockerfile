@@ -12,8 +12,6 @@ RUN npm install
 # Kopieren den Rest der Anwendung
 COPY . .
 
-COPY ./path/to/server/.env ./dist/.env
-
 ARG NODE_ENV
 ARG STRIPE_SECRET_KEY
 ARG MONGODB_PROD_URL

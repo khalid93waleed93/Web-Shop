@@ -1,14 +1,12 @@
 {
-  "name": "backend-testing",
+  "name": "web-shop",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec ts-node server.ts",
-    "build": "node esbuild.config.js",
-    "build-for-windows": "esbuild server.ts --bundle --platform=node --outdir=dist --external:pg-hstore && xcopy views dist\\views /s /e /h /y /i && xcopy public dist\\public /s /e /h /y /i && xcopy .env dist\\.env /y /i",
-    "build-for-linux": "esbuild server.ts --bundle --platform=node --outdir=dist && mkdir -p dist/views && mkdir -p dist/public && cp -R views/. dist/views && cp -R public/. dist/public"
+    "build": "node esbuild.config.js"
   },
   "repository": {
     "type": "git"

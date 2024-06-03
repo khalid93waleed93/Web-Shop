@@ -6,13 +6,19 @@ WORKDIR /usr/src/app
 
 # Kopieren und installieren
 COPY package*.json ./
+
 RUN npm install
 
 # Kopieren den Rest der Anwendung
 COPY . .
 
-# Exponieren den Port
+COPY ./path/to/server/.env ./dist/.env
+
+#bundeln
+RUN npm run build
+
+# Expose the port the app runs on
 EXPOSE 3000
 
 # Starten
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

@@ -1,7 +1,7 @@
 
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import path from 'path';
-import {rootDir} from './util/path';
+import { rootDir,mongoDB_URL} from './util/path';
 import * as admin  from './routes/admin'
 import * as shop  from './routes/shop'
 import * as auth  from './routes/auth'
@@ -76,7 +76,7 @@ app.set('trust proxy', 1);
 
 const MongoDBStore = connectMongoDBSession(session);
 const store = new MongoDBStore({
-    uri:process.env.MONGODB_URL!,
+    uri: mongoDB_URL!,
     collection:'sessions'
 })
 

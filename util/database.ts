@@ -4,9 +4,10 @@ import { Db, MongoClient, ObjectId } from "mongodb";
 import { User } from "../models/user";
 import mongoose from "mongoose";
 import { error } from "console";
-
+import { mongoDB_URL } from "./path";
 export const mongoConnect = (callback: () => void) => {
-  mongoose.connect(process.env.MONGODB_URL!)
+  
+  mongoose.connect(mongoDB_URL!)
   .then(client => {
     console.log('Connected to DB');
     // User.findOne().then( u => {

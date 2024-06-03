@@ -40,8 +40,12 @@ async function buildApp() {
     outfile: 'dist/server.js',
     external: ['vm2', 'pdfkit'],
     define: {
-      'process.env.DATABASE_URL': JSON.stringify(envVars.DATABASE_URL),
-      'process.env.MONGODB_URL': JSON.stringify(envVars.MONGODB_URL)
+      'process.env.NODE_ENV' : JSON.stringify(envVars.NODE_ENV),
+      'process.env.STRIPE_SECRET_KEY': JSON.stringify(envVars.STRIPE_SECRET_KEY),
+      'process.env.MONGODB_PROD_URL': JSON.stringify(envVars.MONGODB_PROD_URL),
+      'process.env.MONGODB_DEV_URL': JSON.stringify(envVars.MONGODB_DEV_URL),
+      'process.env.BASE_PROD_URL': JSON.stringify(envVars.BASE_PROD_URL),
+      'process.env.BASE_DEV_URL': JSON.stringify(envVars.BASE_DEV_URL)
     }
   });
 

@@ -4,7 +4,7 @@ import { Order } from "../models/order";
 import { writeInvoicePdf } from "../util/fileHelper";
 import stripePackage from "stripe";
 const stripe = new stripePackage
-('sk_test_51MyZEBCgJupMH6egW0h1oS65EKgksiyDuWYJ666YWutIJLA4GiShRn2dR0IDh1OYYV0Q6eNTaEiuid1ZKDOTg8Iu001QgKMeSp',
+(process.env.STRIPE_SECRET_KEY!,
 {
     apiVersion:"2022-11-15"
 }

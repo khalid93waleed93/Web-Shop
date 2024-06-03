@@ -6,16 +6,15 @@ import bcryptjs from "bcryptjs";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { validationResult } from "express-validator";
+import { base_URL, mailjet_apiKey,mailjet_secretKey } from './../util/path'
 const mailjetTransport = require("nodemailer-mailjet-transport");
 
-const secretKey = "2888c71a59472469d5376954c3ae3b2d";
-const apiKey = "1dc62fd4963108f98f96c2bb9cd91fca";
 
 const transporter = nodemailer.createTransport(
     mailjetTransport({
         auth: {
-        apiKey: apiKey,
-        apiSecret: secretKey,
+        apiKey: mailjet_apiKey,
+        apiSecret: mailjet_secretKey,
         },
     })
 );
@@ -173,7 +172,7 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
             req.body.email,
             "Password reset",
             `<p>You requested a password reset</p>
-                Click this <a href="http://localhost:3000/reset${token}">link</a> to set a new password`
+                Click this <a href="${base_URL}/reset${token}">link</a> to set a new password`
         );
     } catch (err) {
         next(err);
@@ -237,7 +236,7 @@ async function sendMailNode(to: string, subject: string, html: string) {
             to,
             from:{
                 name:'Khalid',
-                address:'k.waleed@viscircle.com'
+                address:'info@khalid.com.de'
             },
             subject,
             html,

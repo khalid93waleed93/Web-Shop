@@ -45,7 +45,9 @@ async function buildApp() {
       'process.env.MONGODB_PROD_URL': JSON.stringify(envVars.MONGODB_PROD_URL),
       'process.env.MONGODB_DEV_URL': JSON.stringify(envVars.MONGODB_DEV_URL),
       'process.env.BASE_PROD_URL': JSON.stringify(envVars.BASE_PROD_URL),
-      'process.env.BASE_DEV_URL': JSON.stringify(envVars.BASE_DEV_URL)
+      'process.env.BASE_DEV_URL': JSON.stringify(envVars.BASE_DEV_URL),
+      'process.env.MAILJET_SECRET_KEY': JSON.stringify(envVars.MAILJET_SECRET_KEY),
+      'process.env.MAILJET_API_KEY': JSON.stringify(envVars.MAILJET_API_KEY)
     }
   });
 
